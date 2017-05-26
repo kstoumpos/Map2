@@ -136,6 +136,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             Log.i("updateDocument", "Failed to update document!");
 
         }
+//        Object Latitude = doc.getProperties().get("latitude");
+//        Log.i("updateDocument - Latitude:", Latitude.toString());
+//        Object Longitude = doc.getProperties().get("longitude");
+//        Log.i("updateDocument - Longitude:", Longitude.toString());
+
     }
 
     public void deleteDocument(Document doc) {
@@ -207,12 +212,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         for (Iterator<QueryRow> it = result; it.hasNext(); ) {
 
             QueryRow row = it.next();
-            Log.i("MYAPP", "Query Document ID is: ", row);
-            Log.i("MYAPP", "Query result is: ", row.getDocumentId());
+            Log.i("MYAPP", "Query Document ID is: ", row); //empty
+            Log.i("MYAPP", "Query result is: ", row.getDocumentId()); //empty
 
             //p = parseDocPoi(row.getDocument());
-            Log.i("@retrieveAllPois MYAPP - ID:", row.getDocument().getId());
-            Log.i("@retrieveAllPois MYAPP - Title:", row.getDocument().getProperties().get("title").toString());
+            Log.i("@retrieveAllPois MYAPP - ID:", row.getDocument().getId()); //=78870b85-747d-42c1-ae07-4b0dd96d5fdb
+            Document doc;
+            doc = retrieveDocument(row.getDocument().getId());
+//            Log.i("@retrieveAllPois MYAPP - Title:", row.getDocument().getProperties().get("title").toString());
 
 //            ObjectMapper mapper = new ObjectMapper();  // Usually you only need one instance of this per app.
 //            try {
@@ -225,9 +232,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 //            }
 
             Poi p = parseDocPoi(row.getDocument());
-            Log.i("1 - retrieveAllPois MYAPP - categ", p.getCategory().toString());
+            Log.i("1 - retrieveAllPois MYAPP - categ", p.getCategory());
             listOfPois.add(p);
-            Log.i("2  -- retrieveAllPois MYAPP - categ", p.getCategory().toString());
+            Log.i("2  -- retrieveAllPois MYAPP - categ", p.getCategory());
             listOfPois.add(p);
         }
 
@@ -245,12 +252,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             p = retrievePoi(couchDb,"");
             p.setLatitude(poi.getLatitude());
             p.setLongitude(poi.getLongitude());
+
             // Add a marker in Sydney, Australia, and move the camera.
             //LatLng sydney = new LatLng(-34, 151);
             LatLng sydney = new LatLng(pois.get(0).getLatitude(), pois.get(0).getLongitude());
             mMap.addMarker(new MarkerOptions().position(sydney).title(pois.get(0).getTitle()));
             mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
-        }catch (Exception e) {
+       }catch (Exception e) {
             Log.i("Exception",e.getStackTrace().toString());
         }
 
