@@ -16,7 +16,7 @@ public class Poi {
         this.order = order;
     }
 
-    public Poi(){};
+    public Poi(){}
 
     public double getLongitude() {
         return longitude;

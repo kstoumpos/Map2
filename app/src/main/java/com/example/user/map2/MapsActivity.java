@@ -63,7 +63,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
-        deleteDocument(retrievedDocument);
+        //deleteDocument(retrievedDocument);
 
     }
 
@@ -96,14 +96,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         // put those dummy data together
         Map<String, Object> docContent = new HashMap<String, Object>();
-        //docContent.put("title", "Athens");
-        //docContent.put("longitude", 125.0);
-        //docContent.put("latitude", 125.0);
-        //docContent.put("category", "bar");
-        //docContent.put("order", "order");
+        docContent.put("title", poi.getTitle());
+        docContent.put("longitude", poi.getLongitude());
+        docContent.put("latitude", poi.getLatitude());
+        docContent.put("category", poi.getCategory());
+        docContent.put("order", poi.getOrder());
 
-        docContent.put("poi", poi);
+        //docContent.put("poi", poi);
         Log.i("createDocument", "docContent=" + String.valueOf(docContent));
+
 
         // create an empty document, add content and write it to the couchDb
         Document document = new Document(couchDb, docId);
@@ -171,28 +172,35 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     private Poi parseDocPoi(Document d ) {
-        try{
-            Object poiObj;
-            Gson gson = new Gson();
-            poiObj = d.getProperties().get("poi");
-            String JSONString = gson.toJson(poiObj, Poi.class); //Convert the object to json string using Gson
-            Poi poi = (Poi) poiObj;
-            gson.fromJson(JSONString, Poi.class); //convert the json string to Poi object
-            Log.i("@parseDocPoi MYAPP - JSONString:", JSONString); //empty!!!
-            Log.i("getPoiFromDocument", "jsonString>>>" + poi.getCategory());
-//        Log.i("getPoiFromDocument", "poi>>>" + poi.getTitle());
-//        Log.i("getPoiFromDocument", "longitude>>>" + poi.getLongitude());
-//        Log.i("getPoiFromDocument", "latitude>>>" + poi.getLatitude());
-//        Log.i("getPoiFromDocument", "category>>>" + poi.getCategory());
-//        Log.i("getPoiFromDocument", "order>>>" + poi.getOrder());
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-            Log.i("getPoiFromDocument", "jsonString>>>" + poi.getCategory());
-        }
+
+        Object poiObj;
+        Gson gson = new Gson();
+        Map<String, Object> properties = d.getProperties();
+
+        String Title = (String) properties.get("title");
+        //String Title = d.getProperty("title").toString();
+        String Category = d.getProperty("category").toString();
+        String Order = d.getProperty("order").toString();
+        String Latitude = d.getProperty("latitude").toString();
+        String Longitude  = d.getProperty("longitude").toString();
+
+        Double mLatitude = Double.parseDouble(Latitude);
+        Double mLongitude = Double.parseDouble(Longitude);
 
 
-        return poi;
+        Log.i("parseDocPoi, title:", Title);
+        Log.i("parseDocPoi, Category:", Category);
+        Log.i("parseDocPoi, Order:", Order);
+        Log.i("parseDocPoi, Longitude:", Longitude);
+        Log.i("parseDocPoi, Latitude:", Latitude);
+
+        Poi mPoi = new Poi(Title, mLatitude, mLongitude, Category, Order);
+        //String JSONString = gson.toJson(poiObj, Poi.class); //Convert the object to json string using Gson
+        //Poi poi = (Poi) poiObj;
+        gson.fromJson(JSONString, Poi.class); //convert the json string to Poi object
+        //Log.i("@parseDocPoi MYAPP - JSONString:", JSONString); //empty!!!
+        Log.i("getPoiFromDocument", "jsonString>>>" + mPoi.getCategory()); //Marker Category
+        return mPoi;
     }
 
     //from OnMapReady
