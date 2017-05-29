@@ -15,6 +15,7 @@ import com.couchbase.lite.util.Log;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
@@ -31,10 +32,17 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.gson.Gson;
 
+import static android.R.attr.category;
+import static android.R.attr.order;
+import static com.example.user.map2.R.attr.title;
+
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
     private GoogleMap mMap;
 
+    public static final String retrieveP = "RETRIEVE_POI";
+    public static final String retrieveAP = "RETRIEVE_ALL_POIs";
+    public static final String parseDocPoi = "PARSE_DOC_POI";
     final String dbname = "myapp";
     private String docId = "123";
     private Manager manager;
@@ -120,7 +128,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     public Document retrieveDocument(String docId) {
         Document retrievedDocument = couchDb.getDocument(docId);
-        Log.i("retrieveDocument", "retrievedDocument=" + String.valueOf(retrievedDocument.getProperties()));
+        Log.i("retrieveDocument", "retrievedDocument Properties=" + String.valueOf(retrievedDocument.getProperties()));
         return retrievedDocument;
     }
 
@@ -157,7 +165,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         Object poiObj  = null;
         Document retrievedDocument = database.getDocument(docId);
-        Log.i("@retrievePoi MYAPP - ID:", retrievedDocument.getId()); //empty!!!
+        Log.i( retrieveP + " - ID:", retrievedDocument.getId()); //empty!!!
 
         Poi p1 = null;
         try{
@@ -166,11 +174,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         catch (Exception e){
             Log.i("exception",e.getMessage());
         }
-        Log.d("tag", poiObj.toString());
+        Log.d(retrieveP , poiObj.toString());
         //Retrieve the document by id
         return p1;
     }
 
+    //from retrievePoi
     private Poi parseDocPoi(Document d ) {
 
         Object poiObj;
@@ -179,34 +188,39 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         String Title = (String) properties.get("title");
         //String Title = d.getProperty("title").toString();
-        String Category = d.getProperty("category").toString();
-        String Order = d.getProperty("order").toString();
-        String Latitude = d.getProperty("latitude").toString();
-        String Longitude  = d.getProperty("longitude").toString();
+        String Category = (String) properties.get("category");
+        String Order = (String) properties.get("order");
+//        String Latitude = properties.get("latitude").toString();
+//        String Longitude = properties.get("longitude").toString();
 
-        Double mLatitude = Double.parseDouble(Latitude);
-        Double mLongitude = Double.parseDouble(Longitude);
+//        String Order = d.getProperty("order").toString();
+//        String Latitude = d.getProperty("latitude").toString();
+//        String Longitude  = d.getProperty("longitude").toString();
+
+        Double mLatitude = (Double) properties.get("latitude");
+        Double mLongitude = (Double) properties.get("longitude");
 
 
-        Log.i("parseDocPoi, title:", Title);
-        Log.i("parseDocPoi, Category:", Category);
-        Log.i("parseDocPoi, Order:", Order);
-        Log.i("parseDocPoi, Longitude:", Longitude);
-        Log.i("parseDocPoi, Latitude:", Latitude);
+//        Log.i(parseDocPoi + " title: ", Title);
+//        Log.i(parseDocPoi + " Category: ", Category);
+//        Log.i(parseDocPoi + " Longitude: ", Longitude);
+//        Log.i(parseDocPoi + " Latitude: ", Latitude);
+//        Log.i(parseDocPoi + " Order: ", Order);
+
 
         Poi mPoi = new Poi(Title, mLatitude, mLongitude, Category, Order);
         //String JSONString = gson.toJson(poiObj, Poi.class); //Convert the object to json string using Gson
         //Poi poi = (Poi) poiObj;
         gson.fromJson(JSONString, Poi.class); //convert the json string to Poi object
-        //Log.i("@parseDocPoi MYAPP - JSONString:", JSONString); //empty!!!
-        Log.i("getPoiFromDocument", "jsonString>>>" + mPoi.getCategory()); //Marker Category
+        //Log.i(parseDocPoi + " - JSONString:", JSONString); //empty!!!
+        Log.i(parseDocPoi + " getPoiFromDocument ", "jsonString>>>" + mPoi.getCategory()); //Marker Category
         return mPoi;
     }
 
     //from OnMapReady
-    private List<Poi> retrieveAllPois(Database database, String channel) {
+    private ArrayList<Poi> retrieveAllPois(Database database) {
 
-        List<Poi> listOfPois = null;
+        ArrayList<Poi> listOfPois = new ArrayList<Poi>();
 
         // Let's find the documents that have conflicts so we can resolve them:
         Query query = database.createAllDocumentsQuery();
@@ -220,14 +234,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         for (Iterator<QueryRow> it = result; it.hasNext(); ) {
 
             QueryRow row = it.next();
-            Log.i("MYAPP", "Query Document ID is: ", row); //empty
-            Log.i("MYAPP", "Query result is: ", row.getDocumentId()); //empty
+            Log.i(retrieveAP, "Query Document ID is: ", row); //empty
+            Log.i(retrieveAP, "Query result is: ", row.getDocumentId()); //empty
 
             //p = parseDocPoi(row.getDocument());
-            Log.i("@retrieveAllPois MYAPP - ID:", row.getDocument().getId()); //=78870b85-747d-42c1-ae07-4b0dd96d5fdb
+            Log.i( retrieveAP + " - ID:", row.getDocument().getId()); //=78870b85-747d-42c1-ae07-4b0dd96d5fdb
             Document doc;
             doc = retrieveDocument(row.getDocument().getId());
-//            Log.i("@retrieveAllPois MYAPP - Title:", row.getDocument().getProperties().get("title").toString());
+            Log.i(retrieveAP + " - Id:", doc.getProperties().get("_id").toString());
+            Log.i(retrieveAP + " - Rev:", doc.getProperties().get("_rev").toString());
 
 //            ObjectMapper mapper = new ObjectMapper();  // Usually you only need one instance of this per app.
 //            try {
@@ -240,35 +255,49 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 //            }
 
             Poi p = parseDocPoi(row.getDocument());
-            Log.i("1 - retrieveAllPois MYAPP - categ", p.getCategory());
-            listOfPois.add(p);
-            Log.i("2  -- retrieveAllPois MYAPP - categ", p.getCategory());
-            listOfPois.add(p);
+//            Log.i(retrieveAP + " 1 - Category ", p.getCategory());
+//            Log.i(retrieveAP + " 1 - Title ", p.getTitle());
+//            Log.i(retrieveAP + " 1 - Order ", p.getOrder());
+//            Log.i(retrieveAP + " 1 - Latitude ", Double.toString(p.getLatitude()));
+//            Log.i(retrieveAP + " 1 - Longitude ", Double.toString(p.getLongitude()));
+
+            // Adds a poi to the pois array list.
+            Poi PoiObjtect = new Poi(p.getTitle(), 120.00, 120.00,p.getCategory(),p.getOrder() ); // Creating a new object
+            listOfPois.add(PoiObjtect); // Adding it to the list
+
+            int listSize = listOfPois.size();
+
+            for (int i = 0; i<listSize; i++){
+//                Log.i("Member name: ", listOfPois.get(i).getTitle());
+            }
+//            listOfPois.add(p);
+//            Log.i(retrieveAP + "2 - categ", p.getCategory());
+//            listOfPois.add(p);
         }
 
         return listOfPois;
     }
 
+
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
         //String total2 = String.valueOf( poi.getLatitude());
-        List<Poi> pois = retrieveAllPois(couchDb,"public");
-        try{
-            Log.i("+++++++++++++++++getLatitude::::::::::::::",pois.get(0).toString());
-            Poi p = new Poi();
+        ArrayList<Poi> pois = retrieveAllPois(couchDb);
+//            Log.i("+++++++++++++++++getLatitude::::::::::::::",pois.get(0).toString());
+            Poi p;
             p = retrievePoi(couchDb,"");
             p.setLatitude(poi.getLatitude());
             p.setLongitude(poi.getLongitude());
 
-            // Add a marker in Sydney, Australia, and move the camera.
+
+        // Add a marker in Sydney, Australia, and move the camera.
             //LatLng sydney = new LatLng(-34, 151);
-            LatLng sydney = new LatLng(pois.get(0).getLatitude(), pois.get(0).getLongitude());
-            mMap.addMarker(new MarkerOptions().position(sydney).title(pois.get(0).getTitle()));
-            mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
-       }catch (Exception e) {
-            Log.i("Exception",e.getStackTrace().toString());
-        }
+            LatLng marker = new LatLng(pois.get(0).getLatitude(), pois.get(0).getLongitude());
+
+            //LatLng marker = new LatLng(p.getLatitude(), p.getLongitude());
+            mMap.addMarker(new MarkerOptions().position(marker).title(p.getTitle()));
+            mMap.moveCamera(CameraUpdateFactory.newLatLng(marker));
 
         Log.i("Status: ", "End the App!");
     }
